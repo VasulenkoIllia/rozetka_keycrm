@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <title>Моніторинг вебхуків | Rozetka ↔ KeyCRM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <nav class="main-nav">
+          <a href="/" class="nav-link">Замовлення</a>
+          <a href="/webhooks.html" class="nav-link nav-link-active">Вебхуки</a>
+        </nav>
+        <h1>Моніторинг вебхуків KeyCRM</h1>
+        <p class="subtitle">
+          Перевірка обробки вебхуків, URL товарів та статусів синхронізації
+        </p>
+      </header>
+
+      <section class="controls">
+        <button id="refresh-webhooks" type="button">Оновити</button>
+        <label class="autorefresh">
+          <input id="webhook-auto-refresh" type="checkbox" checked />
+          <span>Автооновлення</span>
+        </label>
+        <span id="webhook-status" class="status"></span>
+        <span id="webhook-updated" class="status muted"></span>
+      </section>
+
+      <section class="orders">
+        <article class="order-card">
+          <h2>Огляд</h2>
+          <p id="webhook-summary" class="summary-text">Завантаження даних…</p>
+          <div id="webhook-settings" class="order-viewer"></div>
+          <div id="webhook-stats" class="order-viewer"></div>
+        </article>
+        <article class="order-card">
+          <h2>Активні задачі</h2>
+          <div id="webhook-active" class="order-viewer"></div>
+        </article>
+        <article class="order-card">
+          <h2>У черзі</h2>
+          <div id="webhook-pending" class="order-viewer"></div>
+        </article>
+        <article class="order-card">
+          <h2>Останні вебхуки</h2>
+          <div id="webhook-history" class="order-viewer"></div>
+        </article>
+        <article class="order-card">
+          <h2>Лог помилок</h2>
+          <div id="error-log" class="order-viewer"></div>
+        </article>
+      </section>
+    </main>
+    <script src="webhooks.js"></script>
+  </body>
+</html>

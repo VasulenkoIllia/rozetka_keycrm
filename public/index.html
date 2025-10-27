@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rozetka ↔ KeyCRM Orders Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <nav class="main-nav">
+          <a href="/" class="nav-link nav-link-active">Замовлення</a>
+          <a href="/webhooks.html" class="nav-link">Вебхуки</a>
+        </nav>
+        <h1>Rozetka ↔ KeyCRM</h1>
+        <p class="subtitle">
+          Останнє замовлення з Rozetka та відповідний запис у KeyCRM
+        </p>
+      </header>
+      <section class="controls">
+        <button id="refresh" type="button">Оновити</button>
+        <button id="sync-rozetka-link" type="button">Синхронізувати посилання</button>
+        <span id="status" class="status"></span>
+      </section>
+      <section id="match-info" class="match-info"></section>
+      <section class="orders">
+        <article class="order-card">
+          <h2>Rozetka</h2>
+          <div id="rozetka-order" class="order-viewer"></div>
+        </article>
+        <article class="order-card">
+          <h2>KeyCRM</h2>
+          <div id="keycrm-order" class="order-viewer"></div>
+        </article>
+        <article class="order-card">
+          <h2>Зв’язок та товари</h2>
+          <div id="association-info" class="order-viewer"></div>
+          <div id="association-rozetka" class="order-viewer"></div>
+          <div id="association-keycrm" class="order-viewer"></div>
+          <div id="association-keycrm-fallback" class="order-viewer"></div>
+          <div id="association-items" class="order-viewer"></div>
+          <div id="matches-summary" class="match-summary"></div>
+          <div id="matches-list" class="matches-list"></div>
+        </article>
+        <article class="order-card quick-card">
+          <h2>Моніторинг вебхуків</h2>
+          <p id="queue-summary-text" class="summary-text">Завантаження даних…</p>
+          <a class="link-button" href="/webhooks.html">Відкрити сторінку моніторингу</a>
+        </article>
+      </section>
+      <section class="raw-section">
+        <details id="raw-toggle">
+          <summary>Показати повні відповіді</summary>
+          <div class="raw-content">
+            <h3>Rozetka orders array</h3>
+            <div id="rozetka-raw" class="order-viewer"></div>
+            <h3>KeyCRM orders array</h3>
+            <div id="keycrm-raw" class="order-viewer"></div>
+          </div>
+        </details>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

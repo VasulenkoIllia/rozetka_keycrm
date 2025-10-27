@@ -1,0 +1,16 @@
+node_modules
+logs
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+*.log
+.env*
+.idea
+.vscode
+dist
+build
+coverage
+.DS_Store
+Thumbs.db
