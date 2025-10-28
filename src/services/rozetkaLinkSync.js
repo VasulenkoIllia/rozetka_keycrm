@@ -8,6 +8,7 @@ const DEFAULT_ROZETKA_SEARCH_MAX_PAGES = 5;
 const DEFAULT_ROZETKA_SEARCH_PAGE_SIZE = 100;
 const ROZETKA_MAX_PER_PAGE = 100;
 const DEFAULT_KEYCRM_SEARCH_MAX_ATTEMPTS = 5;
+const DEFAULT_ROZETKA_DIRECT_MAX_ATTEMPTS = 5;
 const DEBUG_LIST_LIMIT = 10;
 const KEYCRM_HINT_FIELDS = [
   'id',
@@ -529,6 +530,71 @@ async function fetchKeycrmOrderDirect(
   };
 }
 
+async function fetchRozetkaOrderDirect(
+  service,
+  hints,
+  expand,
+  maxAttempts = DEFAULT_ROZETKA_DIRECT_MAX_ATTEMPTS,
+  debug
+) {
+  if (!service || !hints || hints.size === 0) {
+    if (debug) {
+      debug.attempts = [];
+    }
+    return { order: null, attempts: [] };
+  }
+
+  const attempts = [];
+
+  for (const hint of hints) {
+    if (maxAttempts && attempts.length >= maxAttempts) {
+      break;
+    }
+
+    const candidate = String(hint ?? '').trim();
+    if (!candidate || !/^\d+$/.test(candidate)) {
+      continue;
+    }
+
+    attempts.push(candidate);
+
+    try {
+      const order = await service.fetchOrderById(candidate, {
+        expand
+      });
+
+      if (order) {
+        if (debug) {
+          debug.found = true;
+          debug.foundId = candidate;
+          debug.attempts = limitDebugList([...attempts]);
+        }
+        return {
+          order,
+          id: candidate,
+          attempts: attempts.slice()
+        };
+      }
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        continue;
+      }
+      if (debug) {
+        debug.lastError = error.message || String(error);
+      }
+    }
+  }
+
+  if (debug) {
+    debug.attempts = limitDebugList([...attempts]);
+  }
+
+  return {
+    order: null,
+    attempts
+  };
+}
+
 const syncLatestRozetkaLink = async (env = process.env) => {
   const keycrmApiKey = env.KEYCRM_API_KEY;
   const rozetkaToken = env.ROZETKA_API_TOKEN;
@@ -643,6 +709,10 @@ const syncRozetkaLinkForPayload = async (payload, env = process.env) => {
   const keycrmCandidates = [];
   const rozetkaCandidates = [];
   const rozetkaSearchConfig = buildRozetkaSearchConfig(env);
+  const rozetkaDirectMaxAttempts = parsePositiveInt(
+    env.ROZETKA_DIRECT_MAX_ATTEMPTS,
+    DEFAULT_ROZETKA_DIRECT_MAX_ATTEMPTS
+  );
   const keycrmDirectMaxAttempts = parsePositiveInt(
     env.KEYCRM_SEARCH_MAX_ATTEMPTS,
     DEFAULT_KEYCRM_SEARCH_MAX_ATTEMPTS
@@ -655,6 +725,13 @@ const syncRozetkaLinkForPayload = async (payload, env = process.env) => {
     maxPages: rozetkaSearchConfig.maxPages,
     reachedEnd: false,
     lastError: null
+  };
+  const rozetkaDirectDebug = {
+    attempts: [],
+    found: false,
+    foundId: null,
+    lastError: null,
+    maxAttempts: rozetkaDirectMaxAttempts
   };
   const keycrmFallbackDebug = {
     attempts: [],
@@ -773,6 +850,7 @@ const syncRozetkaLinkForPayload = async (payload, env = process.env) => {
       : null,
     purchaseItemsSource,
     rozetkaFallback: rozetkaFallbackDebug,
+    rozetkaDirectFetch: rozetkaDirectDebug,
     keycrmDirectFetch: keycrmFallbackDebug,
     ...extra
   });
@@ -790,6 +868,23 @@ const syncRozetkaLinkForPayload = async (payload, env = process.env) => {
       rozetkaHints,
       collectHints(matchedKeycrmOrder, ROZETKA_LINK_FIELDS)
     );
+  }
+
+  if (!rozetkaOrder) {
+    const directAttempt = await fetchRozetkaOrderDirect(
+      rozetkaService,
+      rozetkaHints,
+      rozetkaSearchConfig.expand,
+      rozetkaDirectMaxAttempts,
+      rozetkaDirectDebug
+    );
+    if (directAttempt?.order) {
+      rozetkaOrder = directAttempt.order;
+      purchaseItems = extractPurchaseItemsFromOrder(rozetkaOrder);
+      if (purchaseItems.length > 0) {
+        purchaseItemsSource = 'rozetkaDirect';
+      }
+    }
   }
 
   if (!rozetkaOrder) {
@@ -836,10 +931,6 @@ const syncRozetkaLinkForPayload = async (payload, env = process.env) => {
   if (!rozetkaOrder) {
     rozetkaOrder =
       findRozetkaOrderByHints(rozetkaCandidates, rozetkaHints) || rozetkaOrder;
-  }
-
-  if (!rozetkaOrder && data.rozetka?.order) {
-    rozetkaOrder = data.rozetka.order;
   }
 
   if (!rozetkaOrder) {

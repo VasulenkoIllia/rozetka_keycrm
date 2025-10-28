@@ -39,6 +39,7 @@
 | `COMBINED_KEYCRM_LIMIT` | `20` | Максимум замовлень KeyCRM у комбінованому запиті |
 | `ROZETKA_SEARCH_MAX_PAGES` | `5` | Скільки сторінок глибше шукати «старі» замовлення Rozetka |
 | `ROZETKA_SEARCH_PAGE_SIZE` | `100` | Скільки замовлень читати на сторінку при fallback-пошуку |
+| `ROZETKA_DIRECT_MAX_ATTEMPTS` | `5` | Скільки ідентифікаторів напряму пробувати через `/orders/{id}` |
 | `KEYCRM_SEARCH_MAX_ATTEMPTS` | `5` | Скільки різних ідентифікаторів напряму пробувати в KeyCRM |
 | `KEYCRM_INCLUDE` | _порожньо_ | Додаткові `include` для `order` (наприклад, `buyer,status`) |
 
@@ -51,6 +52,7 @@ ROZETKA_BASE_URL=https://api-seller.rozetka.com.ua/
 ROZETKA_ORDER_LIMIT=50
 ROZETKA_SEARCH_MAX_PAGES=5
 ROZETKA_SEARCH_PAGE_SIZE=100
+ROZETKA_DIRECT_MAX_ATTEMPTS=5
 
 # KeyCRM
 KEYCRM_API_KEY=your_keycrm_api_key

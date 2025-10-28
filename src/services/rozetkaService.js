@@ -4,6 +4,7 @@ const DEFAULT_BASE_URL = 'https://api-seller.rozetka.com.ua/';
 const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_PER_PAGE = 10;
 const MAX_PER_PAGE = 100;
+const DEFAULT_DIRECT_EXPAND = 'user,delivery,purchases';
 
 const ensureTrailingSlash = (url) => {
   if (!url) {
@@ -116,6 +117,39 @@ class RozetkaService {
     }
 
     return extractOrders(data);
+  }
+
+  async fetchOrderById(orderId, { expand = DEFAULT_DIRECT_EXPAND, debug = false } = {}) {
+    const numericId = Number.parseInt(orderId, 10);
+    if (!Number.isSafeInteger(numericId) || numericId <= 0) {
+      throw new Error('Rozetka order ID must be a positive integer');
+    }
+
+    const response = await this.client.get(`orders/${numericId}`, {
+      params: {
+        ...(expand ? { expand } : {})
+      }
+    });
+
+    const { data } = response;
+
+    if (debug) {
+      console.dir(
+        { rozetkaOrderFetch: data },
+        { depth: null, maxArrayLength: 10 }
+      );
+    }
+
+    if (data && typeof data === 'object' && data.success !== false) {
+      if (data.content && typeof data.content === 'object') {
+        return data.content;
+      }
+      if (data.result && typeof data.result === 'object') {
+        return data.result;
+      }
+    }
+
+    return null;
   }
 }
 
