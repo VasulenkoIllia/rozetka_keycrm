@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    container_name: rozetka-keycrm-alandway
+    env_file:
+      - .env
+    restart: unless-stopped
+
+    networks:
+      - proxy
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.alandway.rule=Host(`alandway.workflo.space`)"
+      - "traefik.http.routers.alandway.entrypoints=websecure"
+      - "traefik.http.routers.alandway.tls.certresolver=cf"
+      - "traefik.http.services.alandway.loadbalancer.server.port=3000"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/health > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  proxy:
+    external: true
