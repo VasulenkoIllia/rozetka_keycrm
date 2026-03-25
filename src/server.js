@@ -1,95 +1,16 @@
-const path = require('node:path');
 const process = require('node:process');
 
 require('dotenv').config();
 
 const express = require('express');
-const fetchCombinedOrders = require('./services/combinedOrdersFetcher');
-const { syncLatestRozetkaLink } = require('./services/rozetkaLinkSync');
 const webhookQueue = require('./services/webhookQueue');
 const errorLog = require('./services/errorLog');
 
 const app = express();
 const port = Number.parseInt(process.env.PORT, 10) || 3000;
-const publicDir = path.join(__dirname, '..', 'public');
 
+app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(publicDir));
-
-app.get('/api/combined-orders', async (req, res) => {
-  try {
-    const data = await fetchCombinedOrders();
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message =
-      error.response?.data?.description ||
-      error.response?.data?.message ||
-      error.message;
-
-    res.status(status).json({
-      success: false,
-      message,
-      details: error.response?.data || null
-    });
-  }
-});
-
-app.post('/api/sync-rozetka-link', async (req, res) => {
-  try {
-    const result = await syncLatestRozetkaLink();
-    res.json({
-      success: true,
-      data: result
-    });
-  } catch (error) {
-    const status = error.response?.status || 500;
-    const message =
-      error.response?.data?.description ||
-      error.response?.data?.message ||
-      error.message;
-
-    res.status(status).json({
-      success: false,
-      message,
-      details: error.response?.data || null
-    });
-  }
-});
-
-app.get('/api/queue/status', (req, res) => {
-  try {
-    const state = webhookQueue.getState();
-    res.json({
-      success: true,
-      data: state
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-app.get('/api/logs/errors', (req, res) => {
-  try {
-    const limit = Number.parseInt(req.query.limit, 10);
-    const entries = errorLog.getEntries(Number.isNaN(limit) ? undefined : limit);
-    res.json({
-      success: true,
-      data: entries
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
 
 app.get('/health', (req, res) => {
   res.json({
@@ -166,8 +87,11 @@ app.post('/webhooks/keycrm', (req, res) => {
   });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+app.all('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Not found.'
+  });
 });
 
 app.listen(port, () => {
